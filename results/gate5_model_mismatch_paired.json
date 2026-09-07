@@ -1,0 +1,82 @@
+{
+  "gate": "model_mismatch_and_paired_baseline",
+  "planner_model": "Gate-4 two-compartment-per-arm passive model",
+  "ground_truth_mismatch": {
+    "three_compartments_per_arm": true,
+    "heterogeneous_unmodelled_capacitance_log_std": 0.1,
+    "fixed_branch_specific_distal_leak_offsets": [-0.018703233034424824, -0.03787549392299231, -0.0238735355295796, 0.025014348794885802, 0.06727626970396419, -0.011838356011853271],
+    "distal_leak_offset_draw_std": 0.04
+  },
+  "hidden_change": {
+    "type": "one distal branch additive passive leak",
+    "delta": 0.06
+  },
+  "recording_site": "soma only",
+  "stimulation_budget": 3,
+  "paired_measurement_cost": "each chosen stimulation is recorded before and after; independent baseline/post noise makes difference-noise sqrt(2)*sigma",
+  "noise_std": 0.003,
+  "paired_difference_noise_std": 0.004242640687119286,
+  "reduced_model_paired_design": {
+    "probe_indices": [4, 11, 16],
+    "subsets": [[0, 2, 3], [1, 2, 4], [2, 3, 4]],
+    "predicted_reduced_model_accuracy": 0.3878
+  },
+  "rich_ground_truth_accuracy": {
+    "absolute_post_change": {
+      "gate4_nuisance_aware": 0.37875,
+      "gate3_exact_model": 0.28791666666666665,
+      "noise_only_sensitivity": 0.273125,
+      "reduced_model_paired_design": 0.3310416666666667
+    },
+    "paired_before_after_difference": {
+      "gate4_nuisance_aware": 0.428125,
+      "gate3_exact_model": 0.4039583333333333,
+      "noise_only_sensitivity": 0.4266666666666667,
+      "reduced_model_paired_design": 0.42625
+    }
+  },
+  "random_200_baseline": {
+    "absolute": {
+      "mean": 0.3125833333333333,
+      "median": 0.3147916666666667,
+      "p10": 0.24825,
+      "p25": 0.2665625,
+      "p75": 0.34838541666666667,
+      "p90": 0.3862291666666667,
+      "p95": 0.4100208333333333,
+      "p99": 0.43532916666666654,
+      "min": 0.20770833333333333,
+      "max": 0.44729166666666664
+    },
+    "paired": {
+      "mean": 0.3903729166666666,
+      "median": 0.39239583333333333,
+      "p10": 0.36104166666666665,
+      "p25": 0.37578125,
+      "p75": 0.40671875,
+      "p90": 0.415,
+      "p95": 0.4215,
+      "p99": 0.43458541666666667,
+      "min": 0.3375,
+      "max": 0.43604166666666666
+    }
+  },
+  "exhaustive_1140_paired_audit": {
+    "mean": 0.39277138157894737,
+    "median": 0.395,
+    "p10": 0.36270833333333335,
+    "p25": 0.37875,
+    "p75": 0.40838541666666667,
+    "p90": 0.4175416666666667,
+    "p95": 0.42396875,
+    "p99": 0.43421249999999995,
+    "min": 0.331875,
+    "max": 0.4372916666666667,
+    "reduced_model_paired_design_rank": 46,
+    "reduced_model_paired_design_percentile": 0.9605263157894737,
+    "best_probe_indices": [0, 10, 13],
+    "best_subsets": [[0, 1, 2], [1, 2, 3], [1, 3, 4]]
+  },
+  "interpretation": "Static branch-specific model error can badly corrupt absolute-trace localization even when the planner handles the Gate-4 nuisance variables. Paired before/after differencing cancels much of that static mismatch and recovers localization despite paying sqrt(2) measurement noise. The reduced-model paired design lands in the top few percent of all equal-budget sets on the richer generator, but it is not the true optimum and Gate-4's set slightly outruns it here. Thus baseline differencing is a genuine robustness mechanism, while stimulation ranking remains model-sensitive.",
+  "stopping_line": "Do not call this solved tomography. The mismatch is synthetic and static, and the paired protocol assumes the hidden intervention occurs between a baseline and post measurement of the same specimen. The next step is sequential/adaptive experiment selection and then the real Operaattori morphology."
+}
