@@ -218,7 +218,7 @@ def main() -> None:
         },
         "random_three_pattern_baseline": {
             "designs": RANDOM_DESIGNS,
-            "distinct_patterns_within_each_design": true,
+            "distinct_patterns_within_each_design": True,
             "estimated_accuracy_samples_per_hypothesis": RANDOM_ESTIMATE_SAMPLES,
             "mean": float(np.mean(random_estimated_accuracy)),
             "median": float(np.median(random_estimated_accuracy)),
