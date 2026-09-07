@@ -1,0 +1,23 @@
+{
+  "gate": "symmetry_blindness_and_active_contrast",
+  "model": "five-node mirror-symmetric passive Y tree",
+  "hidden_hypotheses": {
+    "H_A": "extra distal leak on branch A",
+    "H_B": "same extra distal leak on mirror branch B"
+  },
+  "soma_only": true,
+  "noise_std_for_D2": 0.003,
+  "common_positive_probe": [0.7071067811865475, 0.7071067811865475],
+  "max_abs_common_trace_difference": 4.163336342344337e-17,
+  "common_probe_D2": 1.219922812864033e-27,
+  "branch_A_positive_probe": [1.0, 0.0],
+  "branch_A_trace_difference_l2": 0.08541819953445445,
+  "branch_A_probe_D2": 810.6965346342082,
+  "two_trial_physical_contrast": "soma(A-positive trial) - soma(B-positive trial)",
+  "contrast_H_A_peak": -0.017621186379409855,
+  "contrast_H_B_peak": 0.017621186379409903,
+  "mirror_contrast_max_error": 9.71445146547012e-17,
+  "two_trial_contrast_separation_l2": 0.1708363990689089,
+  "two_trial_contrast_D2_with_independent_noise": 1621.3930692684164,
+  "interpretation": "A soma trace under common-mode stimulation is exactly blind to which mirror branch changed. Breaking the input symmetry makes the hidden branch state observable from the same single soma recording site. A differential branch contrast is implemented as two positive trials, not as an assumed signed excitatory stimulus."
+}
