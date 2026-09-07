@@ -1,28 +1,69 @@
 {
-  "gate": "greedy_stimulation_planner",
+  "gate": "noise_aware_greedy_stimulation_planner",
   "candidate_probes": 20,
   "candidate_probe_family": "all positive unit-energy 3-of-6 branch subsets",
   "recording_sites": 1,
   "recording_site": "soma",
   "budget_trials": 3,
-  "chosen_subsets": [[3, 4, 5], [1, 2, 4], [0, 2, 3]],
-  "planner_trace": [
-    {"step": 1, "probe_index": 19, "separated_pairs": 9, "min_positive_pair_distance": 0.015785038749076757, "sum_pair_distances": 0.1420653487416967},
-    {"step": 2, "probe_index": 11, "separated_pairs": 13, "min_positive_pair_distance": 0.015785038749076892, "sum_pair_distances": 0.23789738940026495},
-    {"step": 3, "probe_index": 4, "separated_pairs": 15, "min_positive_pair_distance": 0.015785038749076892, "sum_pair_distances": 0.31067219512217303}
-  ],
-  "all_15_hypothesis_pairs_separated_after_step": 3,
   "noise_std": 0.003,
-  "monte_carlo_trials": 5000,
-  "localization_accuracy": 0.992,
-  "final_min_pairwise_template_distance": 0.015785038749076892,
-  "distance_matrix": [
-    [0.0, 0.022323415881529137, 0.01578503874907708, 0.015785038749077315, 0.02734048911284506, 0.02232341588152943],
-    [0.022323415881529137, 0.0, 0.015785038749077055, 0.027340489112844736, 0.015785038749077447, 0.02232341588152933],
-    [0.01578503874907708, 0.015785038749077055, 0.0, 0.022323415881529113, 0.022323415881529453, 0.027340489112844462],
-    [0.015785038749077315, 0.027340489112844736, 0.022323415881529113, 0.0, 0.022323415881529522, 0.015785038749076982],
-    [0.02734048911284506, 0.015785038749077447, 0.022323415881529453, 0.022323415881529522, 0.0, 0.015785038749076892],
-    [0.02232341588152943, 0.02232341588152933, 0.027340489112844462, 0.015785038749076982, 0.015785038749076892, 0.0]
+  "max_pair_error_for_resolved_pair": 0.05,
+  "chosen_subsets": [[1, 3, 4], [1, 2, 4], [3, 4, 5]],
+  "planner_trace": [
+    {
+      "step": 1,
+      "probe_index": 13,
+      "resolved_pairs": 9,
+      "total_pairs": 15,
+      "sum_pair_error": 3.038328379678807,
+      "worst_pair_error": 0.49999999999998446,
+      "min_mahalanobis2": 6.0583411515579604e-27,
+      "sum_mahalanobis2": 249.16744830985687,
+      "min_template_distance": 2.335060392452873e-16
+    },
+    {
+      "step": 2,
+      "probe_index": 11,
+      "resolved_pairs": 13,
+      "total_pairs": 15,
+      "sum_pair_error": 1.0345666062650125,
+      "worst_pair_error": 0.49999999999994393,
+      "min_mahalanobis2": 7.892887642670336e-26,
+      "sum_mahalanobis2": 498.3348966197135,
+      "min_template_distance": 8.428285044066381e-16
+    },
+    {
+      "step": 3,
+      "probe_index": 19,
+      "resolved_pairs": 15,
+      "total_pairs": 15,
+      "sum_pair_error": 0.02615636839331137,
+      "worst_pair_error": 0.004258708853220903,
+      "min_mahalanobis2": 27.68527203442725,
+      "sum_mahalanobis2": 747.5023449295829,
+      "min_template_distance": 0.01578503874907646
+    }
   ],
-  "interpretation": "Without being handed the three-bit code, a deterministic stimulation planner searches physically positive multi-site probes and chooses three trials that separate all six hidden branch-change hypotheses at a single soma sensor. This is the first reusable planning primitive for the future Operaattori bridge; it still assumes a perfect known forward model and a finite candidate hypothesis set."
+  "all_15_hypothesis_pairs_resolved_after_step": 3,
+  "monte_carlo_trials": 5000,
+  "localization_accuracy": 0.9906,
+  "final_pairwise_score": {
+    "resolved_pairs": 15,
+    "total_pairs": 15,
+    "sum_pair_error": 0.02615636839331137,
+    "mean_pair_error": 0.0017437578928874247,
+    "worst_pair_error": 0.004258708853220903,
+    "min_mahalanobis2": 27.68527203442725,
+    "sum_mahalanobis2": 747.5023449295829,
+    "min_template_distance": 0.01578503874907646
+  },
+  "final_min_pairwise_template_distance": 0.01578503874907646,
+  "distance_matrix": [
+    [0.0, 0.022323415881529345, 0.01578503874907708, 0.02232341588152984, 0.027340489112845704, 0.015785038749077475],
+    [0.022323415881529345, 0.0, 0.01578503874907646, 0.022323415881529304, 0.015785038749077447, 0.027340489112844236],
+    [0.01578503874907708, 0.01578503874907646, 0.0, 0.02734048911284435, 0.022323415881529612, 0.02232341588152914],
+    [0.02232341588152984, 0.022323415881529304, 0.02734048911284435, 0.0, 0.015785038749077013, 0.015785038749076514],
+    [0.027340489112845704, 0.015785038749077447, 0.022323415881529612, 0.015785038749077013, 0.0, 0.022323415881529377],
+    [0.015785038749077475, 0.027340489112844236, 0.02232341588152914, 0.015785038749076514, 0.022323415881529377, 0.0]
+  ],
+  "interpretation": "The planner now scores separations relative to the declared soma-noise level instead of treating every nonzero numerical difference as useful. In this exactly symmetric six-arm toy, the main job is still combinatorial: find three positive multi-site probes that assign all six branch-change hypotheses distinct response codes. Gate 2a audits that limitation before we claim an electrophysiological design advantage on a real morphology."
 }
