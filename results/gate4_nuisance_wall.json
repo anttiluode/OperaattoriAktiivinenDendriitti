@@ -1,0 +1,85 @@
+{
+  "gate": "nuisance_wall_sensitivity_subspace",
+  "model": "known heterogeneous six-arm passive morphology",
+  "hidden_change": {
+    "type": "one distal branch additive passive leak",
+    "delta": 0.06
+  },
+  "recording_site": "soma only",
+  "budget_trials": 3,
+  "candidate_family": "20 positive unit-energy 3-of-6 stimulation patterns",
+  "waveform_samples_per_trial": 14,
+  "noise_std": 0.003,
+  "nuisance_log_std": {
+    "common_leak": 0.05,
+    "split_leak_bias": 0.04,
+    "axial_scale": 0.03,
+    "global_stimulation_gain": 0.05
+  },
+  "designs": {
+    "noise_only_sensitivity_greedy": {
+      "probe_indices": [18, 0, 13],
+      "subsets": [[2, 4, 5], [0, 1, 2], [1, 3, 4]],
+      "trace": [
+        {"step": 1, "probe_index": 18, "predicted_localization_accuracy": 0.27070833333333333},
+        {"step": 2, "probe_index": 0, "predicted_localization_accuracy": 0.4039305555555555},
+        {"step": 3, "probe_index": 13, "predicted_localization_accuracy": 0.5268611111111111}
+      ]
+    },
+    "nuisance_aware_sensitivity_greedy": {
+      "probe_indices": [10, 2, 6],
+      "subsets": [[1, 2, 3], [0, 1, 4], [0, 2, 5]],
+      "trace": [
+        {"step": 1, "probe_index": 10, "predicted_localization_accuracy": 0.20990277777777777},
+        {"step": 2, "probe_index": 2, "predicted_localization_accuracy": 0.3253611111111111},
+        {"step": 3, "probe_index": 6, "predicted_localization_accuracy": 0.45868055555555554}
+      ],
+      "covariance_model": "sigma^2 I + N Lambda N^T"
+    },
+    "gate3_exact_model_design": {
+      "probe_indices": [18, 10, 7],
+      "subsets": [[2, 4, 5], [1, 2, 3], [0, 3, 4]]
+    }
+  },
+  "independent_continuous_nuisance_evaluation": {
+    "train_nuisance_samples": 160,
+    "eval_nuisance_samples": 1200,
+    "hidden_cases": 7200,
+    "classifier": "common-covariance nuisance-trained LDA; same decoder family for every stimulation design",
+    "accuracy": {
+      "noise_only_sensitivity_greedy": 0.40375,
+      "nuisance_aware_sensitivity_greedy": 0.4275,
+      "gate3_exact_model_design": 0.4166666666666667
+    }
+  },
+  "random_200_baseline": {
+    "designs": 200,
+    "mean": 0.38687986111111106,
+    "median": 0.3858333333333333,
+    "p10": 0.3670833333333333,
+    "p25": 0.37777777777777777,
+    "p75": 0.3935416666666667,
+    "p90": 0.40705555555555557,
+    "min": 0.345,
+    "max": 0.43430555555555556
+  },
+  "exhaustive_equal_budget_audit": {
+    "sets": 1140,
+    "mean": 0.386614156920078,
+    "median": 0.3854166666666667,
+    "p10": 0.36583333333333334,
+    "p25": 0.3761111111111111,
+    "p75": 0.39458333333333334,
+    "p90": 0.40655555555555556,
+    "p95": 0.4237569444444444,
+    "p99": 0.43278472222222223,
+    "min": 0.34180555555555553,
+    "max": 0.4415277777777778,
+    "nuisance_aware_greedy_rank": 35,
+    "nuisance_aware_greedy_percentile": 0.9701754385964912,
+    "best_probe_indices": [8, 15, 16],
+    "best_subsets": [[0, 3, 5], [1, 4, 5], [2, 3, 4]]
+  },
+  "interpretation": "The 84% exact-model Gate-3 result does not survive specimen-level nuisance uncertainty. A local planner that ignores nuisance directions falls to about 40%, and the old exact-model design is only about 42%. Whitening branch-change sensitivities by the covariance induced by four declared nuisance directions recovers a modest but real advantage: about 42.8% under independent continuous nuisance draws, above the roughly 38.7% random-set mean. Exhaustively it ranks near the top few percent but is not globally optimal. This is the first direct bridge to Operaattori's tangent machinery: a useful probe should make the target sensitivity not merely large, but distinguishable from the nuisance sensitivity subspace.",
+  "stopping_line": "This is still a known-family oracle benchmark. The planner and decoder know the nuisance distribution and the same model family generates the evaluation data. The next mandatory attacker is model mismatch."
+}
