@@ -1,0 +1,28 @@
+{
+  "gate": "greedy_stimulation_planner",
+  "candidate_probes": 20,
+  "candidate_probe_family": "all positive unit-energy 3-of-6 branch subsets",
+  "recording_sites": 1,
+  "recording_site": "soma",
+  "budget_trials": 3,
+  "chosen_subsets": [[3, 4, 5], [1, 2, 4], [0, 2, 3]],
+  "planner_trace": [
+    {"step": 1, "probe_index": 19, "separated_pairs": 9, "min_positive_pair_distance": 0.015785038749076757, "sum_pair_distances": 0.1420653487416967},
+    {"step": 2, "probe_index": 11, "separated_pairs": 13, "min_positive_pair_distance": 0.015785038749076892, "sum_pair_distances": 0.23789738940026495},
+    {"step": 3, "probe_index": 4, "separated_pairs": 15, "min_positive_pair_distance": 0.015785038749076892, "sum_pair_distances": 0.31067219512217303}
+  ],
+  "all_15_hypothesis_pairs_separated_after_step": 3,
+  "noise_std": 0.003,
+  "monte_carlo_trials": 5000,
+  "localization_accuracy": 0.992,
+  "final_min_pairwise_template_distance": 0.015785038749076892,
+  "distance_matrix": [
+    [0.0, 0.022323415881529137, 0.01578503874907708, 0.015785038749077315, 0.02734048911284506, 0.02232341588152943],
+    [0.022323415881529137, 0.0, 0.015785038749077055, 0.027340489112844736, 0.015785038749077447, 0.02232341588152933],
+    [0.01578503874907708, 0.015785038749077055, 0.0, 0.022323415881529113, 0.022323415881529453, 0.027340489112844462],
+    [0.015785038749077315, 0.027340489112844736, 0.022323415881529113, 0.0, 0.022323415881529522, 0.015785038749076982],
+    [0.02734048911284506, 0.015785038749077447, 0.022323415881529453, 0.022323415881529522, 0.0, 0.015785038749076892],
+    [0.02232341588152943, 0.02232341588152933, 0.027340489112844462, 0.015785038749076982, 0.015785038749076892, 0.0]
+  ],
+  "interpretation": "Without being handed the three-bit code, a deterministic stimulation planner searches physically positive multi-site probes and chooses three trials that separate all six hidden branch-change hypotheses at a single soma sensor. This is the first reusable planning primitive for the future Operaattori bridge; it still assumes a perfect known forward model and a finite candidate hypothesis set."
+}
