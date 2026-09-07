@@ -191,17 +191,7 @@ pairwise-confusion greedy accuracy = 0.67296
 three individual probes            = 0.66870
 ```
 
-So merely fixing the sub-noise bug did **not** solve experiment design.
-
-A second planner directly estimates the six-way nearest-template accuracy under the declared Gaussian noise, using the candidate forward models as a design-time oracle. It chooses:
-
-```text
-(2, 4, 5)
-(2, 3, 5)
-(1, 2, 4)
-```
-
-and obtains:
+A second planner directly estimates the six-way nearest-template accuracy under the declared Gaussian noise, using the candidate forward models as a design-time oracle. It obtains:
 
 ```text
 design-time estimated accuracy       = 0.84094
@@ -218,11 +208,72 @@ p90    = 0.84017
 max    = 0.85763
 ```
 
-This is the first result in the repo that is not just the exact symmetric three-bit-code trick:
+This was the first result not explained by the exact symmetric three-bit-code trick. But it still gave the planner the exact candidate models and exact noise law.
 
-> **When branch response shapes genuinely differ, choosing stimulation from the full multi-hypothesis response geometry improves localization over a random three-trial design on average.**
+---
 
-But it is not a victory lap. Some random sets are still better than this greedy set, and the planner knows the exact candidate models and the exact noise law. The next mandatory wall is nuisance uncertainty/model mismatch.
+## Gate 4 — the nuisance wall
+
+`gate4_nuisance_wall.py`
+
+The hidden target remains one of six distal leak changes, but the same specimen now also has four uncertain directions:
+
+```text
+common membrane-leak scale       log sigma = 0.05
+left/right leak-bias mode        log sigma = 0.04
+global axial-conductance scale   log sigma = 0.03
+stimulation-gain calibration     log sigma = 0.05
+```
+
+The planner still gets only **three positive 3-of-6 stimulation trials and one soma sensor**.
+
+This immediately damages the Gate-3 story. Under independent continuous nuisance draws:
+
+```text
+noise-only sensitivity planner    accuracy = 0.40375
+old Gate-3 exact-model design      accuracy = 0.41667
+```
+
+The old 84% result does **not** survive uncertainty.
+
+The rescue comes directly from the geometry-gradient machinery we ultimately want to use in Operaattori. For a chosen stimulation set, let
+
+```text
+J = branch-change sensitivity columns
+N = nuisance sensitivity columns
+```
+
+Instead of asking only whether `J` is large, form the nuisance-induced covariance
+
+```text
+Sigma = sigma_noise^2 I + N Lambda N^T
+```
+
+and score branch signatures after whitening by `Sigma`.
+
+That nuisance-aware sensitivity planner chooses a different three-trial set and reaches:
+
+```text
+nuisance-aware planner accuracy = 0.42750
+random 200-set mean             = 0.38688
+```
+
+An exhaustive equal-budget audit over all `1140` distinct three-pattern sets gives:
+
+```text
+all-set mean               = 0.38661
+nuisance-aware greedy rank = 35 / 1140
+percentile                 = 97.0%
+best set                   = 0.44153
+```
+
+So this is a smaller but much more relevant result than Gate 3:
+
+> **A good stimulation is not merely one with a large target sensitivity. It is one whose target sensitivity points away from the nuisance sensitivity subspace.**
+
+That is the first direct mathematical handoff to `Operaattori`'s tangent machinery.
+
+It is still an oracle benchmark. The planner and decoder know the nuisance distribution, and the same model family generates the evaluation traces. **Model mismatch is now the mandatory attacker.**
 
 ---
 
@@ -276,14 +327,22 @@ simulate_with_metric_tangents(...)
 
 and returns soma response tangents for local geometry directions.
 
+Gate 4 sharpens what those tangents are for. For stimulation `p`, write
+
+```text
+J_p = [ target sensitivities | nuisance sensitivities ]
+```
+
+The experiment designer should not simply maximize `||dV_soma/dtheta_target||`. It should search stimulation location, timing and eventually strength for target columns that remain distinguishable after accounting for the nuisance columns.
+
 That suggests the first real-morphology planner:
 
 1. load the known reconstructed cell;
 2. choose candidate branch regions;
-3. define candidate local changes;
+3. define candidate local changes and nuisance directions;
 4. define physically realizable stimulation protocols;
-5. simulate the soma waveform under every `(hidden state, protocol)` pair;
-6. score multi-hypothesis localization relative to noise and nuisance uncertainty;
+5. compute/simulate soma waveforms and tangents;
+6. score target distinguishability after nuisance whitening;
 7. choose a protocol;
 8. hide the true state and test localization;
 9. compare with random, individual-site and conventional stimulation under the same trial/energy budget.
@@ -322,7 +381,10 @@ python gate1_six_region_localization.py
 python gate2_greedy_planner.py
 python gate2a_planner_audit.py
 python gate3_broken_symmetry.py
+python gate4_nuisance_wall.py
 ```
+
+`gate4_nuisance_wall.py` performs an exhaustive 1140-set audit by default; use `--skip-exhaustive` for the faster core receipt.
 
 Only NumPy is required.
 
@@ -330,11 +392,8 @@ Only NumPy is required.
 
 ## Roadmap
 
-**Gate 4 — nuisance-aware planning**  
-Hide branch change behind uncertain passive leak/capacitance and stimulation calibration. The planner must marginalize over nuisance rather than pretending the nominal model is exact.
-
-**Gate 5 — model mismatch**  
-Generate synthetic "experimental" traces with a richer model and infer/design with the reduced model.
+**Gate 5 — model mismatch / paired baseline**  
+Generate synthetic "experimental" traces with a richer model and infer/design with the reduced model. Test whether paired before/after responses cancel enough common model error to preserve localization.
 
 **Gate 6 — sequential/adaptive experiment selection**  
 Choose the next stimulation from the remaining posterior ambiguity rather than designing a fixed set offline.
@@ -363,4 +422,4 @@ The specific question is:
 
 > **Can a morphology-informed stimulation planner identify particular hidden dendritic changes with fewer recording sites or fewer trials than ordinary stimulation, while explicitly reporting what remains ambiguous?**
 
-Gate 2a materially weakened the first toy claim. Gate 3 then supplied a harder positive result. That adversarial progression is the intended standard for the rest of the repo.
+Gate 2a materially weakened the first toy claim. Gate 3 then supplied a harder positive result. Gate 4 showed that nuisance uncertainty crushes that easy performance and that sensitivity geometry can recover only part of it. That adversarial progression is the intended standard for the rest of the repo.
