@@ -1,0 +1,58 @@
+{
+  "gate": "planner_claim_and_scoring_audit",
+  "symmetric_six_arm_random_design_audit": {
+    "designed_accuracy": 0.9922,
+    "all_100_random_mean_accuracy": 0.8443860000000001,
+    "random_unique_code_histogram": {
+      "2": 2,
+      "4": 26,
+      "5": 30,
+      "6": 42
+    },
+    "random_designs_with_6_unique_codes": 42,
+    "mean_accuracy_conditioned_on_6_unique_codes": 0.9915761904761903,
+    "median_accuracy_conditioned_on_6_unique_codes": 0.9915,
+    "min_accuracy_conditioned_on_6_unique_codes": 0.9892,
+    "max_accuracy_conditioned_on_6_unique_codes": 0.9942,
+    "designed_minus_unique_random_mean_accuracy": 0.000623809523809693
+  },
+  "exhaustive_distinct_three_pattern_audit": {
+    "candidate_3_of_6_patterns": 20,
+    "unordered_distinct_pattern_triples": 1140,
+    "triples_with_6_unique_branch_codes": 480,
+    "fraction_code_valid": 0.42105263157894735,
+    "min_of_code_valid_min_template_distances": 0.015785038749076177,
+    "max_of_code_valid_min_template_distances": 0.015785038749076892,
+    "distinct_pairwise_distance_spectra_after_rounding_1e-12": 1
+  },
+  "synthetic_scoring_attack": {
+    "noise_std": 0.01,
+    "probe_0": "three sub-noise but nonzero template differences",
+    "probe_1": "one exact alias plus one robust 0.1 separation",
+    "legacy_choice": 0,
+    "legacy_trace": [
+      {
+        "step": 1,
+        "probe_index": 0,
+        "nonzero_pairs": 3,
+        "min_positive_pair_distance": 1e-06,
+        "sum_pair_distances": 4e-06
+      }
+    ],
+    "noise_aware_choice": 1,
+    "noise_aware_trace": [
+      {
+        "step": 1,
+        "probe_index": 1,
+        "resolved_pairs": 2,
+        "total_pairs": 3,
+        "sum_pair_error": 0.5000005733031437,
+        "worst_pair_error": 0.5,
+        "min_mahalanobis2": 0.0,
+        "sum_mahalanobis2": 200.0,
+        "min_template_distance": 0.0
+      }
+    ]
+  },
+  "interpretation": "The early 99% result survives as a coding/identifiability toy, but the strong designed-vs-random claim does not. Among the original random sets, the ones that happen to assign six distinct branch codes already perform essentially as well as the hand-designed set. Exhaustively, all code-valid triples have the same pairwise distance spectrum in the exact symmetric model. The old planner also has a real noise-blind scoring flaw: it can prefer many numerically nonzero sub-noise distinctions over a useful split. The revised planner scores separation relative to declared measurement noise. A meaningful planner advantage must now be shown after breaking exact symmetry and adding nuisance/model uncertainty."
+}
