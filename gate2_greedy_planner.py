@@ -1,4 +1,9 @@
-"""Gate 2: the computer chooses a three-trial soma-only stimulation set."""
+"""Gate 2: the computer chooses a three-trial soma-only stimulation set.
+
+Revision: the planner is now explicitly noise-aware. The original implementation
+counted any numerically nonzero template difference as a separated hypothesis
+pair; that can prefer sub-noise distinctions. See `gate2a_planner_audit.py`.
+"""
 
 from __future__ import annotations
 import itertools
@@ -12,9 +17,10 @@ from active_dendrite import (
     six_arm,
     unit_energy_subset,
 )
-from planner import greedy_probe_set
+from planner import greedy_probe_set, noise_aware_pairwise_score
 
 NOISE_STD = 0.003
+MAX_PAIR_ERROR = 0.05
 TRIALS = 5000
 SEED = 55
 
@@ -29,7 +35,12 @@ def main() -> None:
         axis=0,
     )
 
-    chosen, trace = greedy_probe_set(single, budget=3)
+    chosen, trace = greedy_probe_set(
+        single,
+        budget=3,
+        noise_std=NOISE_STD,
+        max_pair_error=MAX_PAIR_ERROR,
+    )
     chosen_probes = [probes[i] for i in chosen]
     chosen_subsets = [subsets[i] for i in chosen]
 
@@ -49,43 +60,52 @@ def main() -> None:
                 templates[i] - templates[j]
             )
 
+    final_score = noise_aware_pairwise_score(
+        templates,
+        noise_std=NOISE_STD,
+        max_pair_error=MAX_PAIR_ERROR,
+    )
+
     result = {
-        "gate": "greedy_stimulation_planner",
+        "gate": "noise_aware_greedy_stimulation_planner",
         "candidate_probes": len(probes),
         "candidate_probe_family": "all positive unit-energy 3-of-6 branch subsets",
         "recording_sites": 1,
         "recording_site": "soma",
         "budget_trials": 3,
+        "noise_std": NOISE_STD,
+        "max_pair_error_for_resolved_pair": MAX_PAIR_ERROR,
         "chosen_subsets": [list(s) for s in chosen_subsets],
         "planner_trace": trace,
-        "all_15_hypothesis_pairs_separated_after_step": next(
+        "all_15_hypothesis_pairs_resolved_after_step": next(
             (
                 row["step"]
                 for row in trace
-                if row["separated_pairs"] == 15
+                if row["resolved_pairs"] == 15
             ),
             None,
         ),
-        "noise_std": NOISE_STD,
         "monte_carlo_trials": TRIALS,
         "localization_accuracy": accuracy,
+        "final_pairwise_score": final_score,
         "final_min_pairwise_template_distance": float(
             np.min(distance_matrix[np.triu_indices(6, k=1)])
         ),
         "distance_matrix": distance_matrix.tolist(),
         "interpretation": (
-            "Without being handed the three-bit code, a deterministic stimulation "
-            "planner searches physically positive multi-site probes and chooses "
-            "three trials that separate all six hidden branch-change hypotheses "
-            "at a single soma sensor. This is the first reusable planning primitive "
-            "for the future Operaattori bridge; it still assumes a perfect known "
-            "forward model and a finite candidate hypothesis set."
+            "The planner now scores separations relative to the declared soma-noise "
+            "level instead of treating every nonzero numerical difference as useful. "
+            "In this exactly symmetric six-arm toy, the main job is still combinatorial: "
+            "find three positive multi-site probes that assign all six branch-change "
+            "hypotheses distinct response codes. Gate 2a audits that limitation before "
+            "we claim an electrophysiological design advantage on a real morphology."
         ),
     }
 
-    assert result["all_15_hypothesis_pairs_separated_after_step"] == 3
+    assert result["all_15_hypothesis_pairs_resolved_after_step"] == 3
     assert result["localization_accuracy"] > 0.985
-    assert result["final_min_pairwise_template_distance"] > 0.015
+    assert result["final_pairwise_score"]["resolved_pairs"] == 15
+    assert result["final_pairwise_score"]["worst_pair_error"] < 0.01
 
     out = Path("results/gate2_planner.json")
     out.parent.mkdir(exist_ok=True)
