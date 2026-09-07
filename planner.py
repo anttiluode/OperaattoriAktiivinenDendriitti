@@ -7,7 +7,9 @@ orders of magnitude below the recording noise should not outrank one robust
 separation merely because it is nonzero.
 
 This module therefore keeps the original scorer as an explicit legacy/audit
-function and adds a noise-aware Gaussian pair-confusion score.
+function, adds a noise-aware pair-confusion score, and adds a small
+multi-hypothesis Gaussian accuracy estimator. The latter is still a model-based
+design benchmark, not a full Bayesian adaptive experiment planner.
 """
 
 from __future__ import annotations
@@ -115,6 +117,67 @@ def noise_aware_pairwise_score(
     }
 
 
+def gaussian_localization_accuracy_estimate(
+    templates: np.ndarray,
+    *,
+    noise_std: float,
+    samples_per_hypothesis: int = 10000,
+    seed: int = 0,
+) -> float:
+    """Estimate multi-hypothesis nearest-template accuracy under Gaussian noise.
+
+    A direct Monte Carlo draw in the full waveform dimension is unnecessary.
+    For true hypothesis i, correct classification requires
+
+        2 eps dot (mu_j - mu_i) < ||mu_j - mu_i||^2
+
+    for every competitor j. These comparisons live in at most H-1 dimensions,
+    where H is the number of hypotheses. We therefore sample the exact Gaussian
+    discriminant covariance instead of the full time trace.
+
+    Reusing a fixed seed across candidate designs gives common random numbers,
+    which reduces planner-ranking noise. This is a design-time simulator metric,
+    not information available to the eventual experimental observer.
+    """
+    templates = np.asarray(templates, dtype=float)
+    if templates.ndim != 2:
+        raise ValueError("templates must have shape [hypothesis, features]")
+    sigma = float(noise_std)
+    if sigma <= 0.0:
+        raise ValueError("noise_std must be positive")
+    samples = int(samples_per_hypothesis)
+    if samples <= 0:
+        raise ValueError("samples_per_hypothesis must be positive")
+
+    H = int(templates.shape[0])
+    if H <= 1:
+        return 1.0
+
+    rng = np.random.default_rng(int(seed))
+    per_hypothesis = []
+
+    for i in range(H):
+        competitors = [j for j in range(H) if j != i]
+        V = (templates[competitors] - templates[i]) / sigma
+        gram = V @ V.T
+
+        # Numerical PSD cleanup for exact/near symmetries.
+        vals, vecs = np.linalg.eigh(gram)
+        vals = np.clip(vals, 0.0, None)
+        L = vecs * np.sqrt(vals)
+
+        z = rng.normal(size=(samples, H - 1))
+        projected_noise = z @ L.T
+        thresholds = 0.5 * np.diag(gram)
+        correct = np.all(
+            projected_noise < thresholds[None, :],
+            axis=1,
+        )
+        per_hypothesis.append(float(np.mean(correct)))
+
+    return float(np.mean(per_hypothesis))
+
+
 def greedy_probe_set_legacy(
     single_probe_bank: np.ndarray,
     *,
@@ -160,7 +223,7 @@ def greedy_probe_set(
     noise_std: float,
     max_pair_error: float = 0.05,
 ) -> tuple[list[int], list[dict]]:
-    """Greedily choose a noise-aware stimulation set.
+    """Greedily choose a noise-aware stimulation set using pairwise confusion.
 
     `single_probe_bank` has shape `[probe, hypothesis, time]`.
 
@@ -174,6 +237,7 @@ def greedy_probe_set(
 
     This fixes the original failure where many numerically nonzero but
     sub-noise distinctions could beat a smaller number of useful distinctions.
+    It can still be suboptimal for a multi-class objective; Gate 3 tests that.
     """
     bank = np.asarray(single_probe_bank, dtype=float)
     selected: list[int] = []
@@ -219,6 +283,57 @@ def greedy_probe_set(
                 "min_template_distance": float(
                     score["min_template_distance"]
                 ),
+            }
+        )
+
+    return selected, trace
+
+
+def greedy_probe_set_by_accuracy(
+    single_probe_bank: np.ndarray,
+    *,
+    budget: int,
+    noise_std: float,
+    samples_per_hypothesis: int = 20000,
+    seed: int = 0,
+) -> tuple[list[int], list[dict]]:
+    """Greedily maximize estimated multi-hypothesis localization accuracy.
+
+    This uses the same finite candidate hypotheses and Gaussian noise model as
+    the evaluator. It is therefore a transparent *oracle design benchmark* for
+    deciding whether a useful stimulation set exists. It is not yet an adaptive
+    observer and should not be confused with a learned policy.
+    """
+    bank = np.asarray(single_probe_bank, dtype=float)
+    selected: list[int] = []
+    trace: list[dict] = []
+
+    for step in range(int(budget)):
+        best = None
+        for probe_index in range(bank.shape[0]):
+            if probe_index in selected:
+                continue
+            trial = selected + [probe_index]
+            templates = np.concatenate([bank[i] for i in trial], axis=1)
+            accuracy = gaussian_localization_accuracy_estimate(
+                templates,
+                noise_std=float(noise_std),
+                samples_per_hypothesis=int(samples_per_hypothesis),
+                seed=int(seed) + step,
+            )
+            key = (accuracy, -probe_index)
+            if best is None or key > best[0]:
+                best = (key, probe_index, accuracy)
+        if best is None:
+            break
+
+        _, chosen, accuracy = best
+        selected.append(int(chosen))
+        trace.append(
+            {
+                "step": step + 1,
+                "probe_index": int(chosen),
+                "estimated_localization_accuracy": float(accuracy),
             }
         )
 
