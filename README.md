@@ -4,376 +4,333 @@
 
 This repo asks a narrower and more practical question than "reconstruct the whole neuron":
 
-> **Given a known morphology, a small set of plausible hidden dendritic changes, and only one or a few recording sites, which stimulation should we apply next to make those hidden states distinguishable?**
+> **Given a known cell, a stored baseline, a small set of plausible hidden changes, and only one or a few recording sites, which physically realizable experiment makes those hidden states distinguishable?**
 
-It grows directly out of two earlier results:
+The target is a **change detector + stimulation planner + spatial ambiguity map** for a known dendritic morphology.
 
-1. `SighImageSuper`: a hidden distinction can physically exist yet remain invisible under one probe/readout geometry; changing the question can open it.
-2. `Operaattori`: morphology can be compiled to an electrical operator, and soma responses already have verified sensitivities to local geometry.
+This is not yet experimental tomography and it does not claim that arbitrary synaptic distributions are recoverable from a soma trace.
 
-The target tool is a **stimulation planner + uncertainty map** for a known dendritic morphology.
+The project grows out of three connected threads:
 
-This is not yet experimental tomography and it does not claim that arbitrary synaptic distributions are recoverable from a soma trace. The early toy gates are being attacked before the project is allowed to move onto the real Operaattori morphology.
+1. [SighImageSuper](https://github.com/anttiluode/SighImageSuper): a distinction may physically exist yet be invisible under one probe/readout geometry; active questioning can reveal it.
+2. [Operaattori](https://github.com/anttiluode/Operaattori): morphology can be compiled into an electrical operator with audited response tangents to local geometry.
+3. [GeometricNeuronOriginReview](https://github.com/anttiluode/GeometricNeuronOriginReview): the old Perception Lab ECG loop showed, after re-analysis, that changing what a feedback loop measures can change the trajectory subsequently observed.
+
+The original node laboratory is [PerceptionLab](https://github.com/anttiluode/PerceptionLab).
 
 ---
 
-## The inverse problem
+# The inverse problem
 
 Let
 
-- `theta` = hidden dendritic parameters,
+- `theta` = hidden dendritic/material parameters,
 - `p` = a stimulation protocol,
-- `F(theta, p)` = the forward dendritic model,
+- `F(theta,p)` = the forward neuron model,
 - `C` = the available recording operator.
 
 The experimenter sees
 
 ```text
-y = C F(theta, p) + noise
+y = C F(theta,p) + noise
 ```
 
-and may choose the next `p`.
+and may choose `p`.
 
-For two candidate hidden states, a useful probe makes their predicted recordings separate relative to noise:
+The first toy gates asked which stimulation separates candidate states relative to noise. The later gates add nuisance uncertainty, model mismatch, baseline cost, an unchanged-cell hypothesis, calibration drift, and honest ambiguity reporting.
 
-```text
-D^2(p) = (mu_1(p) - mu_2(p))^T R^-1 (mu_1(p) - mu_2(p))
-```
+The current operational question is:
 
-For many candidate states the design objective must be genuinely multi-hypothesis: pairwise nonzero differences are not enough.
-
-The long-term workflow is sequential:
-
-```text
-known morphology
-      |
-candidate hidden changes
-      |
-choose stimulation
-      v
-record soma / sparse sites
-      |
-update uncertainty
-      |
-choose next stimulation
-```
+> **Which local change remains identifiable after nuisance, model error, measurement cost, and calibration drift are allowed to imitate it?**
 
 ---
 
-## Gate 0 — exact soma blindness caused by symmetry
+# Gate history: what survived the attacks
 
-`gate0_symmetry_receipt.py`
+## Gate 0 — exact blindness caused by symmetry
 
-A five-node mirror-symmetric Y tree has two possible hidden changes:
+A mirror-symmetric Y tree has either branch A or mirror branch B changed. With one soma sensor, symmetric stimulation produces identical responses to numerical precision. An asymmetric branch stimulation makes the hidden distinction visible.
 
-```text
-H_A: extra distal leak on branch A
-H_B: the same extra leak on mirror branch B
-```
+> **Unobservable under one question does not mean physically absent.**
 
-The only recording site is the soma.
+This is the direct Sigh -> dendrite bridge.
 
-A symmetric positive stimulus to both branches gives soma traces identical to numerical precision:
+## Gates 1-2 — the first 99% result was mostly coding
 
-```text
-max |y_A - y_B| = 4.16e-17
-D^2 common mode = 1.22e-27
-```
+The original six-arm toy appeared to localize one hidden branch with ~99% accuracy using three grouped stimulations.
 
-Stimulating branch A alone breaks the symmetry:
+The audit showed that in the perfectly symmetric toy, most of that result was simply assigning six unique three-bit stimulation codes. Hundreds of random code-valid designs performed essentially the same.
 
-```text
-||y_A - y_B||_2 = 0.08542
-D^2 = 810.7   (sigma = 0.003)
-```
+The first planner also had a scoring flaw: it counted arbitrarily tiny nonzero separations without asking whether they exceeded noise.
 
-A physically realizable differential contrast uses **two positive trials**:
-
-```text
-stimulate A -> record soma
-stimulate B -> record soma
-subtract the recordings
-```
-
-The hidden branch states then give opposite contrasts.
-
-> **Same recording site, different question, previously invisible state becomes observable.**
-
-That is the direct Sigh -> dendrite bridge.
-
----
-
-## Gate 1 — six hidden regions, one soma, three trials
-
-`gate1_six_region_localization.py`
-
-A perfectly symmetric passive model has six equal distal regions. Exactly one has increased leak. There is still only **one soma recording site**.
-
-A transparent three-trial pattern set is
-
-```text
-(0, 1, 2)
-(0, 3, 4)
-(1, 3, 5)
-```
-
-which gives every branch a unique three-bit membership code.
-
-The original result was:
-
-| protocol | trials | localization accuracy |
-|---|---:|---:|
-| first 3 individual branch probes | 3 | 0.6736 |
-| random balanced 3-pattern design, mean over 100 | 3 | 0.8444 |
-| designed balanced patterns | 3 | 0.9922 |
-| all individual branches | 6 | 1.0000 |
-
-That looked stronger than it was.
-
-### Audit correction
-
-`gate2a_planner_audit.py` conditions the random comparison on whether the random design also gives all six branches unique codes.
-
-Of the original 100 random designs:
-
-```text
-42 had six unique branch codes
-mean accuracy of those 42 = 0.991576
-hand-designed accuracy     = 0.992200
-```
-
-The gap is only `0.000624` in accuracy.
-
-Exhaustively, among all `1140` unordered triples of distinct `3-of-6` patterns, `480` give six unique codes — and in the exactly symmetric toy **all 480 have the same pairwise response-distance spectrum to 1e-12 rounding**.
-
-So the correct interpretation is:
-
-> **Gate 1 establishes that coded multi-site stimulation can localize six symmetric hidden states in three soma-only trials. It does not establish that our particular design rule is electrophysiologically superior to other code-valid designs.**
-
-This correction matters because the real project must exploit response geometry, not merely assign binary labels to symmetric arms.
-
----
-
-## Gate 2 — scoring flaw and repaired pairwise planner
-
-`gate2_greedy_planner.py`  
-`gate2a_planner_audit.py`
-
-The first planner had another real flaw. It counted every numerically nonzero template difference as a "separated" hypothesis pair.
-
-A synthetic attacker makes the failure exact:
-
-```text
-probe 0: separates all 3 pairs only by ~1e-6 under noise sigma=1e-2
-probe 1: leaves one pair aliased but separates the other two by 0.1
-```
-
-The legacy scorer chooses **probe 0** because `3 nonzero pairs > 2 nonzero pairs`.
-
-The repaired scorer declares a pair resolved only when its predicted Gaussian pair error is below a stated tolerance and otherwise uses noise-scaled confusion/Mahalanobis separation. It chooses **probe 1**.
-
-On the perfectly symmetric six-arm problem the repaired planner still finds a valid three-pattern code, but that remains mostly a combinatorial result. Gate 3 is the more important test.
-
----
+Both issues are retained as attackers rather than hidden.
 
 ## Gate 3 — break exact symmetry
 
-`gate3_broken_symmetry.py`
+With fixed branch heterogeneity, the trivial three-bit equivalence disappears. A genuine multi-hypothesis design criterion reached about `0.84` in the matched toy, while the controlled random distribution was lower on average.
 
-The six arms now have fixed 10% log-scale heterogeneity in axial conductance and passive leak. The hidden change is smaller (`delta leak = 0.06`). Exact binary-code equivalence is gone.
+That result still assumed the planner knew the exact candidate models.
 
-Every method gets the same budget: **three stimulation trials, one soma sensor, noise sigma = 0.003**.
+## Gate 4 — nuisance wall
 
-The repaired pairwise heuristic is still not enough:
+The hidden branch change is mixed with uncertain common leak, split bias, axial scale, and stimulation calibration.
 
-```text
-pairwise-confusion greedy accuracy = 0.67296
-three individual probes            = 0.66870
-```
+The useful design quantity becomes not merely a large target derivative but a target derivative that cannot be easily imitated by nuisance directions.
 
-A second planner directly estimates the six-way nearest-template accuracy under the declared Gaussian noise, using the candidate forward models as a design-time oracle. It obtains:
+For a stimulation panel, write
 
 ```text
-design-time estimated accuracy       = 0.84094
-independent discriminant check        = 0.84181
-direct 50,000-trial localization     = 0.84310
+J = target-sensitivity columns
+N = nuisance-sensitivity columns
 ```
 
-For 200 matched-budget random distinct three-pattern designs:
+and use the nuisance-induced covariance
 
 ```text
-mean   = 0.76501
-median = 0.77168
-p90    = 0.84017
-max    = 0.85763
+Sigma = sigma_noise^2 I + N Lambda N^T.
 ```
 
-This was the first result not explained by the exact symmetric three-bit-code trick. But it still gave the planner the exact candidate models and exact noise law.
+Then compare target signatures after whitening by `Sigma`.
+
+The central handoff to real Operaattori is:
+
+> **Do not maximize a morphology derivative merely because it is large. Choose an experiment in which the target derivative points away from the nuisance derivative subspace.**
+
+## Gate 5 — model mismatch and paired change measurement
+
+The inference model is deliberately simpler than the synthetic evaluator. Absolute post-change traces degrade strongly because static model error can imitate the target.
+
+The useful rescue is to measure the same cell before and after:
+
+```text
+delta y = y_after - y_before.
+```
+
+Much of the benefit came from **what was measured** — change relative to the same cell — rather than from a sophisticated selector alone.
+
+This changed the practical application from absolute reconstruction to:
+
+> **I know this cell's baseline. Something changed. Which experiment best separates the plausible causes?**
+
+The baseline is therefore treated as a real resource, not a free subtraction.
 
 ---
 
-## Gate 4 — the nuisance wall
+# Gate 6 — fair baseline memory, fixed vs adaptive
 
-`gate4_nuisance_wall.py`
+`gate6_fixed_vs_adaptive_baseline_panel.py`
 
-The hidden target remains one of six distal leak changes, but the same specimen now also has four uncertain directions:
+The independent review found three important issues in the earlier gates:
 
-```text
-common membrane-leak scale       log sigma = 0.05
-left/right leak-bias mode        log sigma = 0.04
-global axial-conductance scale   log sigma = 0.03
-stimulation-gain calibration     log sigma = 0.05
-```
+- the wrong Gate-3 comparator was accidentally carried forward;
+- Gate 3 and Gate 4 used different waveform sample counts, confounding the apparent nuisance penalty;
+- exact duplicate templates were mishandled by the old accuracy estimator.
 
-The planner still gets only **three positive 3-of-6 stimulation trials and one soma sensor**.
+Those are fixed from Gate 6 onward. The response is documented in [`REVIEW_RESPONSE_080926.md`](REVIEW_RESPONSE_080926.md).
 
-This immediately damages the Gate-3 story. Under independent continuous nuisance draws:
+Every strategy now gets the same explicit budget:
 
 ```text
-noise-only sensitivity planner    accuracy = 0.40375
-old Gate-3 exact-model design      accuracy = 0.41667
+20 pre-change baseline recordings
+ 3 post-change recordings
+14 samples per waveform
+ 1 soma sensor
+----------------------------
+23 recordings total
 ```
 
-The old 84% result does **not** survive uncertainty.
+No adaptive method is allowed to invent a pre-change recording after the hidden event.
 
-The rescue comes directly from the geometry-gradient machinery we ultimately want to use in Operaattori. For a chosen stimulation set, let
+There are seven target classes:
 
 ```text
-J = branch-change sensitivity columns
-N = nuisance sensitivity columns
+UNCHANGED
+branch 0 changed
+branch 1 changed
+...
+branch 5 changed
 ```
 
-Instead of asking only whether `J` is large, form the nuisance-induced covariance
+The target magnitude is unknown. The model includes continuous nuisance, 5% after-only stimulation-gain drift, and a new held-out capacitance/leak mismatch profile for every synthetic specimen. Inference uses a reduced model and one joint particle belief over target + nuisance across all three trials.
 
-```text
-Sigma = sigma_noise^2 I + N Lambda N^T
-```
+On 1,050 held-out specimens:
 
-and score branch signatures after whitening by `Sigma`.
+| strategy | top-1 | top-2 | unchanged recall |
+|---|---:|---:|---:|
+| **Gate-4 nuisance fixed** | **36.29%** | **59.33%** | 46.67% |
+| first causal adaptive planner | 32.86% | 55.24% | **50.67%** |
+| Gate-5 paired fixed | 32.95% | 53.43% | 36.67% |
+| actual Gate-3 fixed | 30.95% | 51.71% | 36.67% |
+| chance | 14.29% | — | — |
 
-That nuisance-aware sensitivity planner chooses a different three-trial set and reaches:
+The first adaptive planner did **not** beat the strong fixed design. That result is preserved rather than tuned away.
 
-```text
-nuisance-aware planner accuracy = 0.42750
-random 200-set mean             = 0.38688
-```
+Among sampled random fixed designs restricted to those that already give all six branches distinct stimulation codes, the mean top-1 accuracy was about `32.08%`; the Gate-4 fixed set was about `+4.2` percentage points above that controlled mean.
 
-An exhaustive equal-budget audit over all `1140` distinct three-pattern sets gives:
+At only ~36% seven-way top-1 accuracy, ambiguity is part of the answer. Gate 6 therefore also records posterior probability, top-2 accuracy, Brier score, log loss, calibration error, unchanged recall, and abstention curves.
 
-```text
-all-set mean               = 0.38661
-nuisance-aware greedy rank = 35 / 1140
-percentile                 = 97.0%
-best set                   = 0.44153
-```
-
-So this is a smaller but much more relevant result than Gate 3:
-
-> **A good stimulation is not merely one with a large target sensitivity. It is one whose target sensitivity points away from the nuisance sensitivity subspace.**
-
-That is the first direct mathematical handoff to `Operaattori`'s tangent machinery.
-
-It is still an oracle benchmark. The planner and decoder know the nuisance distribution, and the same model family generates the evaluation traces. **Model mismatch is now the mandatory attacker.**
+> **A useful instrument must sometimes say AMBIGUOUS or UNIDENTIFIABLE.**
 
 ---
 
-## Why `A - B` needs care
+# New insight: the baseline panel is an empirical operator fingerprint
 
-A mathematical signed stimulation vector is useful for analysis, but an excitatory synaptic experiment may not be able to inject a negative current at will.
+Gate 6 pays for 20 pre-change recordings, one for each balanced `3-of-6` stimulation pattern.
 
-Therefore this repo distinguishes:
+But the passive toy models are linear in stimulation. Those 20 traces are not 20 unrelated memories. They are redundant measurements of a lower-dimensional stimulation-to-soma transfer operator.
 
-```text
-mathematical contrast:  A - B
-physical protocol:      positive A trial and positive B trial, then compare outputs
-```
-
-For nonlinear dendrites those are not interchangeable. The full planner must optimize realizable experiments, not elegant vectors that the hardware cannot deliver.
-
----
-
-## What counts as success
-
-There are three increasingly difficult targets.
-
-### Distinguish
-
-Which of a finite set of candidate hidden changes occurred?
-
-### Localize
-
-Which branch or region changed?
-
-### Estimate
-
-Recover several changes and their magnitudes with calibrated uncertainty under nuisance parameters and model mismatch.
-
-Only the first two have toy receipts so far.
-
----
-
-## Direct bridge to `Operaattori`
-
-The existing `Operaattori` code already has most of the forward-model machinery we need.
-
-In particular, `audits/real_metric_tangent.py` exposes the machinery behind
+Let
 
 ```text
-build_compartment_graph(...)
-metric_tangent(...)
-simulate(...)
-simulate_with_metric_tangents(...)
+P  = [20 x 6] stimulation-design matrix
+H0 = [6 x time] single-branch baseline transfer waveforms
+Y0 = measured 20-probe baseline panel.
 ```
 
-and returns soma response tangents for local geometry directions.
-
-Gate 4 sharpens what those tangents are for. For stimulation `p`, write
+Then approximately
 
 ```text
-J_p = [ target sensitivities | nuisance sensitivities ]
+Y0 = P H0 + noise.
 ```
 
-The experiment designer should not simply maximize `||dV_soma/dtheta_target||`. It should search stimulation location, timing and eventually strength for target columns that remain distinguishable after accounting for the nuisance columns.
+Instead of storing each noisy baseline answer independently, estimate
 
-That suggests the first real-morphology planner:
+```text
+H0_hat = (P^T P)^-1 P^T Y0
+```
 
-1. load the known reconstructed cell;
-2. choose candidate branch regions;
-3. define candidate local changes and nuisance directions;
-4. define physically realizable stimulation protocols;
-5. compute/simulate soma waveforms and tangents;
-6. score target distinguishability after nuisance whitening;
-7. choose a protocol;
-8. hide the true state and test localization;
-9. compare with random, individual-site and conventional stimulation under the same trial/energy budget.
+(or a regularized/generalized least-squares version when covariance is nontrivial).
 
-See [`OPERAATTORI_BRIDGE.md`](OPERAATTORI_BRIDGE.md).
+A future baseline for any stimulation in the calibrated linear input span can then be synthesized as
 
-Important: the current Operaattori tangent machinery is primarily for **geometry** (`length`, `diameter`, and the pose null). Synaptic-strength or local-channel inference needs additional parameter derivatives or controlled finite differences. Geometry derivatives must not be silently renamed synaptic tomography.
+```text
+y_before_hat(p) = p^T H0_hat
+```
 
----
+with declared prediction covariance.
 
-## Attackers required before calling this useful
+This changes the meaning of baseline memory:
 
-The real project has to survive:
+> **The pre-change panel is not merely an episodic lookup table. It can be compressed into an empirical fingerprint of how this particular cell maps stimulation into measurement.**
 
-- imperfect morphology;
-- uncertain passive membrane parameters;
-- stimulation amplitude/calibration error;
-- soma noise and filtering;
-- hidden changes in more than one region;
-- parameters whose soma signatures are nearly collinear;
-- nonlinear NMDA/active conductances;
-- probe strength changing the operating point;
-- physically unrealizable signed probes;
-- model mismatch between planner and data generator;
-- exact blind directions such as pose changes that preserve intrinsic cable geometry.
+An independent September 2026 review tested this reuse of the already-paid-for baseline panel and reported an improvement of the existing fixed Gate-6 panel from roughly `36.29%` to `40.00%` on the same cases, and `34.10% -> 38.95%` on a fresh synthetic cohort. Those numbers are a **review result / handoff**, not yet a frozen first-class gate in this repository.
 
-A good instrument must sometimes answer **UNIDENTIFIABLE**.
+The next implementation should therefore be **Gate 6b: global baseline operator fit**, including the induced correlations in its uncertainty model and fresh-seed validation.
+
+This also relaxes the chronology constraint in the linear regime. An adaptive post-change planner need not necessarily have directly recorded the exact future probe before the change; it may ask a new probe whose pre-change response can be predicted from `H0_hat`, provided that prediction uncertainty is fully counted.
+
+For nonlinear or state-dependent experiments this shortcut will fail unless the baseline model is expanded appropriately.
 
 ---
 
-## Run
+# New bridge: changing the dynamics can itself be an experiment
+
+The old [GeometricNeuronOriginReview](https://github.com/anttiluode/GeometricNeuronOriginReview) finally explains the Perception Lab `ecg.json` loop.
+
+The important correction is that the graph was not sampling four eigenmodes. `ImageToVectorNode` resized a generated checkerboard, flattened it, and the first four values were fed back into a finite-memory homeostatic controller. Changing vector size changed **what spatial region was measured**, and because that measurement was inside feedback, it changed the future trajectory.
+
+That suggests a stronger extension of Active Dendrite.
+
+So far the planner chooses mainly the input `p` in
+
+```text
+x_(t+1) = A(theta) x_t + B p_t
+y_t     = C x_t.
+```
+
+But an experiment may also choose an operating condition `q` that changes the effective dynamics:
+
+```text
+A -> A(q).
+```
+
+If observation participates in feedback,
+
+```text
+u_t = p_t + K_q C_q x_t,
+```
+
+then even the closed-loop operator changes:
+
+```text
+A_closed(q) = A + B K_q C_q.
+```
+
+This motivates a later design question:
+
+> **Can we choose a temporary dynamical regime in which a hidden target sensitivity rotates away from nuisance directions that were inseparable at the default operating point?**
+
+Possible real-neuron controls, depending on what the simulator/experiment can physically support, include stimulation timing, strength, active NMDA state, shunting/inhibitory context, holding condition, or controlled feedback.
+
+This is not yet a gate and should not be mixed into the real-morphology transfer until the simpler fixed-panel protocol is established.
+
+---
+
+# Direct bridge to real Operaattori morphology
+
+The next major transfer should use the audited real [Operaattori](https://github.com/anttiluode/Operaattori) morphology rather than adding ever more detail to the six-arm toy.
+
+Start with parameters whose tangents are already audited:
+
+```text
+local LENGTH change
+local DIAMETER change
+POSE null as a negative control
+```
+
+Freeze the Gate-6 accounting:
+
+- explicit baseline resource;
+- same post-change trial budget;
+- same soma observation window;
+- unchanged-cell class;
+- calibration drift;
+- nuisance directions;
+- model mismatch where feasible;
+- posterior/ambiguity output;
+- strong fixed panel first;
+- adaptive superiority as a separate hypothesis, not a prerequisite.
+
+Then add the new baseline-operator idea:
+
+```text
+known morphology/model prior
+        +
+empirical baseline transfer fingerprint
+        +
+audited local geometry tangents
+        +
+nuisance sensitivities
+        ->
+which local changes remain identifiable?
+```
+
+The pose null matters especially: if the modeled electrical measurement is intrinsically blind to a pure pose change, the system must report that blindness rather than invent a location.
+
+---
+
+# Connection to the larger program
+
+The project collection is converging on a common object:
+
+> **Which distinctions can a system recover through its available actions, given uncertainty, limited measurements, reference-memory cost, and the possibility that those actions change the system?**
+
+The roles are becoming clearer:
+
+- **Operaattori** — structure/morphology compiles the forward response operator and its tangents.
+- **SighImageSuper** — persistence, travelling traces, changed material, active queries, and self-interrogation.
+- **GeometricNeuronOriginReview / PerceptionLab ECG** — observation inside feedback can alter the future dynamics being observed.
+- **Active Dendrite** — turn those ideas into an external experiment-design problem with explicit budgets, nuisance and ambiguity.
+- **Jello / ThinkingJello** — ask how the interrogation itself changes the material and how self-generated effects are separated from new evidence.
+- **368** — account for the cost of retaining, refreshing, retrieving, and replacing reference memory.
+
+The larger operational version is now:
+
+> **Which distinctions can a bounded system make observable by choosing its inputs, observations, and temporary dynamics — while paying for uncertainty, baseline memory, and the back-action of asking?**
+
+---
+
+# Files / gates
 
 ```bash
 python gate0_symmetry_receipt.py
@@ -382,44 +339,46 @@ python gate2_greedy_planner.py
 python gate2a_planner_audit.py
 python gate3_broken_symmetry.py
 python gate4_nuisance_wall.py
+python gate5_model_mismatch.py
+python gate6_fixed_vs_adaptive_baseline_panel.py
 ```
 
-`gate4_nuisance_wall.py` performs an exhaustive 1140-set audit by default; use `--skip-exhaustive` for the faster core receipt.
+See also:
 
-Only NumPy is required.
+- [`LATEST_RESULT.md`](LATEST_RESULT.md)
+- [`REVIEW_RESPONSE_080926.md`](REVIEW_RESPONSE_080926.md)
+- [`OPERAATTORI_BRIDGE.md`](OPERAATTORI_BRIDGE.md)
 
 ---
 
-## Roadmap
+# Next gates
 
-**Gate 5 — model mismatch / paired baseline**  
-Generate synthetic "experimental" traces with a richer model and infer/design with the reduced model. Test whether paired before/after responses cancel enough common model error to preserve localization.
-
-**Gate 6 — sequential/adaptive experiment selection**  
-Choose the next stimulation from the remaining posterior ambiguity rather than designing a fixed set offline.
+**Gate 6b — global baseline operator fit**  
+Use the full pre-change panel jointly, propagate its covariance correctly, validate on fresh seeds, and compare calibration/unchanged detection as well as localization.
 
 **Gate 7 — real Operaattori morphology**  
-Known reconstructed cell, candidate branch regions, soma-only recording, geometry changes first because verified tangents already exist.
+Known reconstructed cell, local length/diameter changes, pose null, soma-only measurement first.
 
-**Gate 8 — synaptic/local conductance parameters**  
-Add explicit derivatives or controlled finite differences for the parameters actually being inferred.
+**Gate 8 — empirical-baseline + morphology-tangent fusion**  
+Combine the model prior with the particular cell's measured transfer fingerprint instead of asking either source to carry the whole inverse problem.
 
-**Gate 9 — nonlinear operating-point design**  
-Choose stimulation location, timing **and strength** because sensitivity rotates with drive.
+**Gate 9 — synaptic/local conductance parameters**  
+Add explicit parameter derivatives or controlled finite differences for the quantities actually inferred.
 
-**Gate 10 — sparse multi-electrode planner**  
-Jointly choose stimulation and recording addresses under a budget.
+**Gate 10 — dynamics as a query**  
+Under equal budgets, test whether changing timing/drive/active state/feedback reveals target directions hidden at the default operating point.
+
+**Gate 11 — sparse multi-electrode planner**  
+Jointly choose stimulation and recording addresses.
 
 ---
 
-## Claim boundary
+# Claim boundary
 
 Active experiment design, system identification, optimal design, electrophysiology, synaptic mapping and dendritic parameter fitting are established fields.
 
 This repo does **not** claim to have invented dendritic tomography or to have shown that arbitrary dendritic states are recoverable from soma recordings.
 
-The specific question is:
+Its current specific question is:
 
-> **Can a morphology-informed stimulation planner identify particular hidden dendritic changes with fewer recording sites or fewer trials than ordinary stimulation, while explicitly reporting what remains ambiguous?**
-
-Gate 2a materially weakened the first toy claim. Gate 3 then supplied a harder positive result. Gate 4 showed that nuisance uncertainty crushes that easy performance and that sensitivity geometry can recover only part of it. That adversarial progression is the intended standard for the rest of the repo.
+> **Can a morphology-informed, baseline-calibrated experiment planner identify particular local dendritic changes with limited recording sites/trials while explicitly reporting nuisance, model sensitivity, and what remains ambiguous?**
