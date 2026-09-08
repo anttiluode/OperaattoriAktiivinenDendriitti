@@ -339,7 +339,7 @@ python gate2_greedy_planner.py
 python gate2a_planner_audit.py
 python gate3_broken_symmetry.py
 python gate4_nuisance_wall.py
-python gate5_model_mismatch.py
+python gate5_model_mismatch_paired_baseline.py
 python gate6_fixed_vs_adaptive_baseline_panel.py
 ```
 
