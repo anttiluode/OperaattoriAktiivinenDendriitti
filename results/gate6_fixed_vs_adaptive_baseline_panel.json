@@ -1,0 +1,157 @@
+{
+  "gate": "baseline_panel_fixed_vs_adaptive",
+  "classes": [
+    "unchanged",
+    "branch_0_leak_change",
+    "branch_1_leak_change",
+    "branch_2_leak_change",
+    "branch_3_leak_change",
+    "branch_4_leak_change",
+    "branch_5_leak_change"
+  ],
+  "chance_accuracy": 0.14285714285714285,
+  "measurement_protocol": {
+    "candidate_post_probes": 20,
+    "baseline_panel_pre_change_recordings": 20,
+    "post_change_recordings_per_strategy": 3,
+    "total_recordings_if_baseline_counted": 23,
+    "baseline_status": "identical full candidate-probe panel supplied to every strategy before the hidden change",
+    "waveform_samples_per_recording": 14,
+    "sensor": "soma only",
+    "noise_std_each_recording": 0.003
+  },
+  "truth_generator": {
+    "model": "three-compartment-per-arm passive generator",
+    "held_out_mismatch": "new capacitance heterogeneity and static branch leak offsets for every specimen",
+    "target_magnitude": "uniform 0.04..0.08 additive distal leak when changed",
+    "shared_nuisance_log_std": {
+      "common_leak": 0.05,
+      "split_leak_bias": 0.04,
+      "axial_scale": 0.03,
+      "pre_stimulation_gain": 0.05,
+      "after_only_gain_drift": 0.05
+    },
+    "specimens_per_class": 150,
+    "total_specimens": 1050,
+    "evaluation_seed": 20261009
+  },
+  "inference": {
+    "reduced_model": "two-compartment-per-arm model",
+    "joint_particles_per_class": 128,
+    "joint_classes": 7,
+    "joint_particle_states": 896,
+    "shared_state_across_trials": [
+      "target class",
+      "target magnitude",
+      "common leak",
+      "split bias",
+      "axial scale",
+      "pre gain",
+      "post-only gain drift"
+    ],
+    "model_floor_std": 0.0025,
+    "baseline_use": "stored measured baseline for the selected probe enters the gain-drift prediction; no post-change query asks for a new pre-change measurement",
+    "adaptive_rule": "causal posterior-weighted between-class / within-nuisance discriminant score; no hidden label or rich-generator parameters"
+  },
+  "fixed_designs": {
+    "gate4_nuisance": [10, 2, 6],
+    "gate5_paired": [4, 11, 16],
+    "gate3_actual": [18, 17, 11]
+  },
+  "metrics": {
+    "gate4_nuisance": {
+      "accuracy": 0.3628571428571429,
+      "top2_accuracy": 0.5933333333333334,
+      "mean_truth_posterior": 0.21088041226853582,
+      "brier": 0.7698939722982435,
+      "log_loss": 1.6670212654946628,
+      "ece10": 0.08118213019025738,
+      "unchanged_recall": 0.4666666666666667,
+      "abstention": {
+        "0.3": {"coverage": 0.32571428571428573, "accuracy_when_answered": 0.4824561403508772},
+        "0.4": {"coverage": 0.06476190476190476, "accuracy_when_answered": 0.5735294117647058},
+        "0.5": {"coverage": 0.009523809523809525, "accuracy_when_answered": 0.7},
+        "0.6": {"coverage": 0.0009523809523809524, "accuracy_when_answered": 1.0}
+      }
+    },
+    "gate5_paired": {
+      "accuracy": 0.3295238095238095,
+      "top2_accuracy": 0.5342857142857143,
+      "mean_truth_posterior": 0.20081456891691568,
+      "brier": 0.7843049843563702,
+      "log_loss": 1.7131135857649917,
+      "ece10": 0.07361003515335864,
+      "unchanged_recall": 0.36666666666666664,
+      "abstention": {
+        "0.3": {"coverage": 0.25333333333333335, "accuracy_when_answered": 0.4849624060150376},
+        "0.4": {"coverage": 0.05714285714285714, "accuracy_when_answered": 0.6166666666666667},
+        "0.5": {"coverage": 0.008571428571428572, "accuracy_when_answered": 0.5555555555555556},
+        "0.6": {"coverage": 0.0038095238095238095, "accuracy_when_answered": 0.75}
+      }
+    },
+    "gate3_actual": {
+      "accuracy": 0.30952380952380953,
+      "top2_accuracy": 0.5171428571428571,
+      "mean_truth_posterior": 0.1914978206515138,
+      "brier": 0.8002016835379266,
+      "log_loss": 1.7605040118532393,
+      "ece10": 0.046431686590225,
+      "unchanged_recall": 0.36666666666666664,
+      "abstention": {
+        "0.3": {"coverage": 0.23523809523809525, "accuracy_when_answered": 0.3967611336032389},
+        "0.4": {"coverage": 0.04666666666666667, "accuracy_when_answered": 0.5102040816326531},
+        "0.5": {"coverage": 0.009523809523809525, "accuracy_when_answered": 0.7},
+        "0.6": {"coverage": 0.002857142857142857, "accuracy_when_answered": 1.0}
+      }
+    },
+    "adaptive": {
+      "accuracy": 0.32857142857142857,
+      "top2_accuracy": 0.5523809523809524,
+      "mean_truth_posterior": 0.20794070235341877,
+      "brier": 0.7750056510562496,
+      "log_loss": 1.6790109585692357,
+      "ece10": 0.0632005940839529,
+      "unchanged_recall": 0.5066666666666667,
+      "abstention": {
+        "0.3": {"coverage": 0.29619047619047617, "accuracy_when_answered": 0.4758842443729904},
+        "0.4": {"coverage": 0.04380952380952381, "accuracy_when_answered": 0.6086956521739131},
+        "0.5": {"coverage": 0.005714285714285714, "accuracy_when_answered": 0.5},
+        "0.6": {"coverage": 0.0, "accuracy_when_answered": null}
+      }
+    }
+  },
+  "valid_code_random_fixed": {
+    "available_valid_code_designs": 480,
+    "sampled_designs": 40,
+    "sampling_seed": 20261109,
+    "condition": "all six branches have distinct three-bit stimulation membership codes",
+    "accuracy": {
+      "mean": 0.32080952380952377,
+      "median": 0.3180952380952381,
+      "p10": 0.29904761904761906,
+      "p90": 0.346,
+      "min": 0.29523809523809524,
+      "max": 0.3619047619047619
+    }
+  },
+  "adaptive_probe_behavior": {
+    "distinct_three_probe_trajectories": 38,
+    "first_probe_counts": {"10": 5, "11": 898, "16": 147},
+    "most_common_trajectories": [
+      {"probe_indices": [11, 8, 4], "count": 285},
+      {"probe_indices": [11, 8, 16], "count": 247},
+      {"probe_indices": [11, 8, 10], "count": 149},
+      {"probe_indices": [11, 8, 7], "count": 63},
+      {"probe_indices": [16, 3, 10], "count": 34},
+      {"probe_indices": [16, 3, 11], "count": 34},
+      {"probe_indices": [11, 8, 0], "count": 29},
+      {"probe_indices": [11, 8, 5], "count": 25}
+    ]
+  },
+  "comparisons": {
+    "adaptive_minus_gate4_fixed_accuracy": -0.03428571428571431,
+    "gate4_fixed_minus_code_valid_random_mean_accuracy": 0.04204761904761911,
+    "adaptive_minus_code_valid_random_mean_accuracy": 0.007761904761904803
+  },
+  "interpretation": "With an explicit pre-change baseline panel, an unchanged class, after-only gain drift, unknown change magnitude, shared nuisance state, and specimen-specific held-out model mismatch, the strong Gate-4 fixed set remains informative and beats the mean of sampled code-valid random sets. The first causal adaptive heuristic does not beat that fixed set under the same post-change budget. This is a useful negative result: adaptive superiority is not required before transferring the fixed protocol to a real Operaattori morphology. The baseline is an explicit external memory resource and its 20-recording acquisition cost is reported rather than hidden."
+}
