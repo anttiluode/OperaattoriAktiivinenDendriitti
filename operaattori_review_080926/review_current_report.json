@@ -1,0 +1,286 @@
+{
+  "repository": "anttiluode/OperaattoriAktiivinenDendriitti",
+  "commit": "eba6b9cf7884dd269240b325f779c82192577bfc",
+  "numpy_version": "2.3.5",
+  "designs": {
+    "actual_gate3": {
+      "indices": [
+        18,
+        17,
+        11
+      ],
+      "subsets": [
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          2,
+          3,
+          5
+        ],
+        [
+          1,
+          2,
+          4
+        ]
+      ]
+    },
+    "hardcoded_as_gate3": {
+      "indices": [
+        18,
+        10,
+        7
+      ],
+      "subsets": [
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          3,
+          4
+        ]
+      ]
+    },
+    "gate4_nuisance": {
+      "indices": [
+        10,
+        2,
+        6
+      ],
+      "subsets": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          1,
+          4
+        ],
+        [
+          0,
+          2,
+          5
+        ]
+      ]
+    },
+    "noise_only": {
+      "indices": [
+        18,
+        0,
+        13
+      ],
+      "subsets": [
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          3,
+          4
+        ]
+      ]
+    },
+    "reduced_paired": {
+      "indices": [
+        4,
+        11,
+        16
+      ],
+      "subsets": [
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          1,
+          2,
+          4
+        ],
+        [
+          2,
+          3,
+          4
+        ]
+      ]
+    }
+  },
+  "gate3_gate4_zero_nuisance_operator_max_difference": 0.0,
+  "sampling_control": {
+    "actual_gate3": {
+      "70_samples_per_probe": 0.841875,
+      "14_samples_per_probe": 0.48462500000000003
+    },
+    "hardcoded_as_gate3": {
+      "70_samples_per_probe": 0.8557433333333334,
+      "14_samples_per_probe": 0.4919183333333333
+    }
+  },
+  "exact_tie_accuracy_estimator": {
+    "six_identical_templates_returned": 0.0,
+    "correct_uniform_prior_accuracy": 0.16666666666666666
+  },
+  "gate3_random_designs_stratified_by_membership_code_count": {
+    "5": {
+      "n_designs": 87,
+      "mean": 0.7528026819923369,
+      "median": 0.7501000000000001,
+      "min": 0.7064333333333334,
+      "max": 0.7927666666666666
+    },
+    "4": {
+      "n_designs": 34,
+      "mean": 0.6447970588235294,
+      "median": 0.6459,
+      "min": 0.6149333333333333,
+      "max": 0.6742666666666667
+    },
+    "6": {
+      "n_designs": 79,
+      "mean": 0.8301835443037976,
+      "median": 0.8292999999999999,
+      "min": 0.8060333333333335,
+      "max": 0.8576333333333334
+    }
+  },
+  "gate4_evaluation": {
+    "actual_gate3": 0.37375,
+    "hardcoded_as_gate3": 0.4166666666666667,
+    "gate4_nuisance": 0.4275,
+    "noise_only": 0.40375,
+    "reduced_paired": 0.40125
+  },
+  "gate4_random_designs_stratified_by_membership_code_count": {
+    "6": {
+      "n_designs": 81,
+      "mean": 0.39650205761316876,
+      "median": 0.3918055555555556,
+      "min": 0.3736111111111111,
+      "max": 0.43430555555555556
+    },
+    "5": {
+      "n_designs": 89,
+      "mean": 0.38130149812734077,
+      "median": 0.3834722222222222,
+      "min": 0.345,
+      "max": 0.4038888888888889
+    },
+    "4": {
+      "n_designs": 30,
+      "mean": 0.37744907407407413,
+      "median": 0.3788888888888889,
+      "min": 0.3566666666666667,
+      "max": 0.3884722222222222
+    }
+  },
+  "gate5_evaluation": {
+    "actual_gate3": {
+      "absolute": 0.3729166666666667,
+      "paired": 0.41729166666666667
+    },
+    "hardcoded_as_gate3": {
+      "absolute": 0.28791666666666665,
+      "paired": 0.4039583333333333
+    },
+    "gate4_nuisance": {
+      "absolute": 0.37875,
+      "paired": 0.428125
+    },
+    "noise_only": {
+      "absolute": 0.273125,
+      "paired": 0.4266666666666667
+    },
+    "reduced_paired": {
+      "absolute": 0.3310416666666667,
+      "paired": 0.42625
+    }
+  },
+  "gate5_random_designs_stratified_by_membership_code_count": {
+    "absolute": {
+      "6": {
+        "n_designs": 79,
+        "mean": 0.3257436708860759,
+        "median": 0.3233333333333333,
+        "min": 0.24520833333333333,
+        "max": 0.44729166666666664
+      },
+      "5": {
+        "n_designs": 87,
+        "mean": 0.31248323754789276,
+        "median": 0.31854166666666667,
+        "min": 0.226875,
+        "max": 0.41041666666666665
+      },
+      "4": {
+        "n_designs": 34,
+        "mean": 0.2822610294117646,
+        "median": 0.2852083333333333,
+        "min": 0.20770833333333333,
+        "max": 0.3929166666666667
+      }
+    },
+    "paired": {
+      "6": {
+        "n_designs": 79,
+        "mean": 0.4050052742616034,
+        "median": 0.4058333333333333,
+        "min": 0.37625,
+        "max": 0.43604166666666666
+      },
+      "5": {
+        "n_designs": 87,
+        "mean": 0.38929837164750963,
+        "median": 0.38708333333333333,
+        "min": 0.363125,
+        "max": 0.416875
+      },
+      "4": {
+        "n_designs": 34,
+        "mean": 0.35912377450980393,
+        "median": 0.36083333333333334,
+        "min": 0.3375,
+        "max": 0.3829166666666667
+      }
+    }
+  },
+  "after_only_gain_drift_attacker": {
+    "seed": 909,
+    "description": "delta + (exp(log_gain_shift)-1)*absolute_after; same shift across probes",
+    "paired_accuracy": {
+      "0.0": {
+        "gate4_nuisance": 0.428125,
+        "noise_only": 0.4266666666666667,
+        "actual_gate3": 0.41729166666666667
+      },
+      "0.01": {
+        "gate4_nuisance": 0.42041666666666666,
+        "noise_only": 0.4139583333333333,
+        "actual_gate3": 0.40375
+      },
+      "0.05": {
+        "gate4_nuisance": 0.36104166666666665,
+        "noise_only": 0.3572916666666667,
+        "actual_gate3": 0.2939583333333333
+      }
+    }
+  }
+}
